@@ -1217,15 +1217,6 @@ class SourcePackageSerializer(MultipleArtifactContentSerializer):
                 )
             )
 
-        content = SourcePackage.objects.filter(source=data["source"], version=data["version"])
-        if content.exists():
-            raise ValidationError(
-                _(
-                    "There is already a DSC file with version '{version}' and source name "
-                    "'{source}'."
-                ).format(version=data["version"], source=data["source"])
-            )
-
         artifacts = {data["relative_path"]: data["artifact"]}
         for source in data["checksums_sha256"]:
             content = Artifact.objects.filter(sha256=source["sha256"], size=source["size"])
@@ -1242,6 +1233,15 @@ class SourcePackageSerializer(MultipleArtifactContentSerializer):
 
         data["artifacts"] = artifacts
         return data
+
+    def retrieve(self, data):
+        """
+        If the Source Package already exists, retrieve it
+        """
+        return SourcePackage.objects.filter(
+            source=data["source"], 
+            version=data["version"]
+        ).first()
 
     class Meta:
         fields = MultipleArtifactContentSerializer.Meta.fields + (
